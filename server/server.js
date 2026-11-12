@@ -11,6 +11,8 @@ import express from "express";
 import helmet from "helmet";
 import path from "path";
 import { fileURLToPath } from "url";
+import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
 
 // 3. Import database connection
 import {
@@ -23,6 +25,15 @@ import authRoutes from "./routes/authRoutes.js";
 
 // 4. Create the Express application
 const app = express();
+// Create PostgreSQL session store
+const PostgreSQLStore = connectPgSimple(session);
+
+// Configure PostgreSQL to store user sessions
+const sessionStore = new PostgreSQLStore({
+    pool: pool,
+    createTableIfMissing: true,
+    tableName: "user_sessions"
+});
 
 // 5. Get the current directory
 const __filename = fileURLToPath(import.meta.url);
@@ -34,7 +45,23 @@ const PORT = process.env.PORT || 3000;
 // ==========================================
 // MIDDLEWARE
 // ==========================================
+// Configure user session management
+app.use(session({
+    store: sessionStore,
 
+    secret: process.env.SESSION_SECRET,
+
+    resave: false,
+
+    saveUninitialized: false,
+
+    cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 1000 * 60 * 60 * 24
+    }
+}));
 // Add security-related HTTP headers
 app.use(helmet());
 

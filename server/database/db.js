@@ -2,12 +2,6 @@
 // Import the PostgreSQL package
 import pg from "pg";
 
-// Import dotenv to read environment variables
-import dotenv from "dotenv";
-
-// Load environment variables
-dotenv.config();
-
 // Get the Pool class from PostgreSQL
 const { Pool } = pg;
 

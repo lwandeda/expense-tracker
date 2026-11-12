@@ -102,3 +102,143 @@ export async function registerUser(req, res, next) {
         next(error);
     }
 }
+
+// ==========================================
+// USER LOGIN
+// ==========================================
+
+export async function loginUser(req, res, next) {
+    try {
+        // 1. Get login information
+        const { email, password } = req.body ?? {};
+
+        // 2. Validate required fields
+        if (
+            typeof email !== "string" ||
+            typeof password !== "string"
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Please provide your email and password."
+            });
+        }
+
+        // 3. Clean the email
+        const cleanEmail = email.trim().toLowerCase();
+
+        // 4. Validate the email
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (
+            cleanEmail.length > 255 ||
+            !emailPattern.test(cleanEmail)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Please provide a valid email address."
+            });
+        }
+
+        // 5. Validate the password
+        if (
+            password.length === 0 ||
+            Buffer.byteLength(password, "utf8") > 72
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid email or password."
+            });
+        }
+
+        // 6. Find the user in PostgreSQL
+        const result = await pool.query(
+            `SELECT id, name, email, password_hash
+             FROM users
+             WHERE email = $1`,
+            [cleanEmail]
+        );
+
+        // 7. Check whether the user exists
+        if (result.rows.length === 0) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid email or password."
+            });
+        }
+
+        const user = result.rows[0];
+
+        // 8. Compare the entered password with the stored hash
+        const passwordMatches = await bcrypt.compare(
+            password,
+            user.password_hash
+        );
+
+        if (!passwordMatches) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid email or password."
+            });
+        }
+
+        // 9. Regenerate the session ID for security
+        await new Promise((resolve, reject) => {
+            req.session.regenerate((error) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve();
+                }
+            });
+        });
+
+        // 10. Store the authenticated user's information
+        req.session.user = {
+            id: user.id,
+            name: user.name,
+            email: user.email
+        };
+
+        // 11. Save the session in PostgreSQL
+        await new Promise((resolve, reject) => {
+            req.session.save((error) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve();
+                }
+            });
+        });
+
+        // 12. Return successful login response
+        return res.status(200).json({
+            success: true,
+            message: "Login successful.",
+            user: req.session.user
+        });
+
+    } catch (error) {
+        next(error);
+    }
+}
+// 13. Log out the user
+export const logoutUser = (req, res, next) => {
+
+    // Destroy the user's session
+    req.session.destroy((error) => {
+
+        // Handle errors
+        if (error) {
+            return next(error);
+        }
+
+        // Clear the session cookie
+        res.clearCookie("connect.sid");
+
+        // Return successful logout response
+        return res.status(200).json({
+            success: true,
+            message: "Logout successful."
+        });
+    });
+};
