@@ -1,10 +1,11 @@
 
 import express from "express";
 
-// Import category controllers
 import {
     createCategory,
-    getCategories
+    getCategories,
+    updateCategory,
+    deleteCategory
 } from "../controllers/categoryController.js";
 
 // Import authentication middleware
@@ -18,6 +19,12 @@ router.post("/", requireAuth, createCategory);
 
 // Protect the route and retrieve categories
 router.get("/", requireAuth, getCategories);
+
+// Protect the route and update a category
+router.put("/:id", requireAuth, updateCategory);
+
+// Protect the route and delete a category
+router.delete("/:id", requireAuth, deleteCategory);
 
 // Export the router
 export default router;

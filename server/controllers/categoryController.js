@@ -178,3 +178,63 @@ export async function updateCategory(req, res, next) {
         next(error);
     }
 }
+
+ // ==========================================
+// DELETE CATEGORY
+// ==========================================
+
+
+export async function deleteCategory(req, res, next) {
+    try {
+        // 1. Get the category ID from the URL
+        const categoryId = req.params.id;
+
+        // 2. Validate the category ID
+        if (!/^\d+$/.test(categoryId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid category ID."
+            });
+        }
+
+        // 3. Get the logged-in user's ID
+        const userId = req.session.user.id;
+
+        // 4. Delete only this user's category
+        const result = await pool.query(
+            `DELETE FROM categories
+             WHERE id = $1 AND user_id = $2
+             RETURNING id, name, type`,
+            [categoryId, userId]
+        );
+
+        // 5. Check whether the category exists
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Category not found."
+            });
+        }
+
+        // 6. Return the successful response
+        return res.status(200).json({
+            success: true,
+            message: "Category deleted successfully.",
+            category: result.rows[0]
+        });
+
+    } catch (error) {
+        next(error);
+    }
+}
+
+// 1. Get the category ID from the URL
+const categoryId = req.params.id;
+
+// 2. Validate the category ID
+if (!/^\d+$/.test(categoryId)) {
+    return res.status(400).json({
+        success: false,
+        message: "Invalid category ID."
+    });
+}
