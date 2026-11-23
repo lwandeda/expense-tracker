@@ -23,6 +23,9 @@ import {
 // 4. Import authentication routes
 import authRoutes from "./routes/authRoutes.js";
 
+// Import category routes
+import categoryRoutes from "./routes/categoryRoutes.js";
+
 // 4. Create the Express application
 const app = express();
 // Create PostgreSQL session store
@@ -84,6 +87,9 @@ app.use(express.static(path.join(__dirname, "../client")));
 
 // Authentication routes
 app.use("/api/auth", authRoutes);
+
+// Register category routes
+app.use("/api/categories", categoryRoutes);
 
 // Check whether the backend and database are working
 app.get("/api/health", async (req, res) => {

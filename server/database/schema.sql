@@ -1,3 +1,4 @@
+
 -- =========================================
 -- EXPENSE TRACKER DATABASE SCHEMA
 -- =========================================
@@ -27,7 +28,10 @@ CREATE TABLE IF NOT EXISTS categories (
         ON DELETE CASCADE,
 
     CONSTRAINT unique_user_category
-        UNIQUE (user_id, name, type)
+        UNIQUE (user_id, name, type),
+
+    CONSTRAINT unique_category_user_id
+        UNIQUE (user_id, id)
 );
 
 
@@ -57,9 +61,9 @@ CREATE TABLE IF NOT EXISTS transactions (
         REFERENCES users(id)
         ON DELETE CASCADE,
 
-    CONSTRAINT fk_transaction_category
-        FOREIGN KEY (category_id)
-        REFERENCES categories(id)
+    CONSTRAINT fk_transaction_user_category
+        FOREIGN KEY (user_id, category_id)
+        REFERENCES categories(user_id, id)
         ON DELETE RESTRICT
 );
 
