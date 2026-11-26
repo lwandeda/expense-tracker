@@ -183,7 +183,6 @@ export async function updateCategory(req, res, next) {
 // DELETE CATEGORY
 // ==========================================
 
-
 export async function deleteCategory(req, res, next) {
     try {
         // 1. Get the category ID from the URL
@@ -226,15 +225,4 @@ export async function deleteCategory(req, res, next) {
     } catch (error) {
         next(error);
     }
-}
-
-// 1. Get the category ID from the URL
-const categoryId = req.params.id;
-
-// 2. Validate the category ID
-if (!/^\d+$/.test(categoryId)) {
-    return res.status(400).json({
-        success: false,
-        message: "Invalid category ID."
-    });
 }
